@@ -72,27 +72,28 @@ class KdTree:
         self.nearest = np.array(nearest)
 
         def recurve(node):
-            if node is not None:
-                axis = node.depth % self.n
-                daxis = x[axis] - node.data[axis]
+            if node is None:
+                return
+            axis = node.depth % self.n
+            daxis = x[axis] - node.data[axis]
+            if daxis < 0:
+                recurve(node.lchild)
+            else:
+                recurve(node.rchild)
+
+            dist = sqrt(sum((p1 - p2) ** 2 for p1, p2 in zip(x, node.data)))
+            for i, d in enumerate(self.nearest):
+                if d[0] < 0 or dist < d[0]:
+                    self.nearest = np.insert(self.nearest, i, [dist, node], axis=0)
+                    self.nearest = self.nearest[:-1]
+                    break
+
+            n = list(self.nearest[:, 0]).count(-1)
+            if self.nearest[-n-1, 0] > abs(daxis):
                 if daxis < 0:
-                    recurve(node.lchild)
-                else:
                     recurve(node.rchild)
-
-                dist = sqrt(sum((p1 - p2) ** 2 for p1, p2 in zip(x, node.data)))
-                for i, d in enumerate(self.nearest):
-                    if d[0] < 0 or dist < d[0]:
-                        self.nearest = np.insert(self.nearest, i, [dist, node], axis=0)
-                        self.nearest = self.nearest[:-1]
-                        break
-
-                n = list(self.nearest[:, 0]).count(-1)
-                if self.nearest[-n-1, 0] > abs(daxis):
-                    if daxis < 0:
-                        recurve(node.rchild)
-                    else:
-                        recurve(node.lchild)
+                else:
+                    recurve(node.lchild)
 
         recurve(self.KdTree)
 
